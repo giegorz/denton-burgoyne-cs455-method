@@ -5,7 +5,10 @@ from matplotlib.figure import Figure
 from matplotlib.tri import Triangulation
 
 from applications.orchiestrators import denton_orchestrator
+from applications.pandas_merging import merge_results_with_nodes
 from denton_logic import *
+from importers.importer import import_results, import_nodes
+
 
 def plot_moment_field(denton: Denton) -> Figure:
     fig, ax = plt.subplots()
@@ -30,77 +33,77 @@ def plot_moment_field(denton: Denton) -> Figure:
 
     return fig
 
-def plot_contour(merged_df: pd.DataFrame,
-                 *,
-                 colormap_min: float = None,
-                 colormap_max: float = None,
-                 title: str = "Contour plot") -> Figure:
+def plot_contour(
+    results: pd.DataFrame,
+    *,
+    colormap_min: float | None = None,
+    colormap_max: float | None = None,
+    title: str = "Contour plot",
+) -> Figure:
 
     fig, ax = plt.subplots(figsize=(8, 5), dpi=150)
 
-    x = merged_df["x"].to_numpy()
-    y = merged_df["y"].to_numpy()
-    values = merged_df["gamma"].to_numpy()
+    x = results["x"].to_numpy()
+    y = results["y"].to_numpy()
+    values = results["gamma"].to_numpy()
+
+    if colormap_max:
+        values = np.clip(values, colormap_min, colormap_max)
+
+    if np.isinf(values).any():
+        raise ValueError("Values must not be infinite")
+
     tri = Triangulation(x, y)
 
-    # --- USTAWIENIA KOLORÓW / NORMY ---
-    cmin = min(values) if colormap_min is None else colormap_min
-    cmax = max(values) if colormap_max is None else colormap_max
-    n_levels = 12                        # ile przedziałów (np. 10 → 10 „kafli”)
-    bounds = np.linspace(cmin, cmax, n_levels + 1)  # np. 0,1,2,...,10 (11 krawędzi → 10 przedziałów)
-    norm = BoundaryNorm(bounds, ncolors=256, clip=False)  # clip=False → wartości <cmin i >cmax dostaną „extend”
+    cmin = values.min() if colormap_min is None else colormap_min
+    cmax = values.max() if colormap_max is None else colormap_max
 
-    # --- WYPEŁNIENIE (MUSI dostać norm + levels=bounds) ---
+    bounds = np.linspace(cmin, cmax, 13)
+
     cntr = ax.tricontourf(
         tri, values,
         levels=bounds,
-        norm=norm,
-        cmap="turbo_r",  # 'turbo', 'viridis', 'JET_R'
-        antialiased=True
+        cmap="turbo_r",
+        extend="both",
+        antialiased=True,
     )
 
-    # Linie konturów (spójne z bounds)
     ax.tricontour(
         tri, values,
         levels=bounds,
         colors="k",
         linewidths=0.5,
         alpha=0.5,
-        norm=norm,
-        antialiased=True
+        antialiased=True,
     )
 
-    cb = fig.colorbar(
-        cntr, ax=ax, label="γ (gamma)",
-        boundaries=bounds,
-        ticks=bounds,
-        extend="both"
-    )
+    fig.colorbar(cntr, ax=ax, label="γ (gamma)", ticks=bounds)
 
-    ax.triplot(
-        tri,
-        color="0.5",
-        linewidth=0.3,
-        alpha=0.5,
-        zorder=0
-    )
-
+    ax.triplot(tri, color="0.5", linewidth=0.3, alpha=0.5, zorder=0)
     ax.set_aspect("equal")
     ax.set_title(title)
-    # ax.set_xlabel("x")
-    # ax.set_ylabel("y")
     plt.tight_layout()
     return fig
 
 def main():
 
-    c = [100, 35]
+    c = [750, 500]
     a = [0, 70]
-    moments = np.array([35, 15, 10])
-    dent = denton_orchestrator(c,a,moments)
+    capacity = Capacity(c,a)
+    results = import_results("../files/dane_z_midasa.xlsx")
+    nodes = import_nodes("../files/dane_z_midasa.xlsx")
 
-    p = plot_moment_field(dent)
-    p.show()
+    gammas = calculate_gammas(results, capacity)
+    merged_results = merge_results_with_nodes(gammas, nodes)
+
+    plot_contour(merged_results, colormap_max=1.0)
+    plt.show()
+
+    # moments = np.array([35, 15, 10])
+    # dent = denton_orchestrator(c,a,moments)
+    #
+    # p = plot_moment_field(dent)
+    # p.show()
 
 
 if __name__ == "__main__":
