@@ -4,7 +4,8 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7189e73a-1d76-4080-85fd-a0d336ac77a1" name="Changes" comment="plotting added">
+    <list default="true" id="7189e73a-1d76-4080-85fd-a0d336ac77a1" name="Changes" comment="denton logic improved">
+      <change afterPath="$PROJECT_DIR$/applications/orchiestrators.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/importers/importer.py" beforeDir="false" afterPath="$PROJECT_DIR$/importers/importer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scripts/denton_logic.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/denton_logic.py" afterDir="false" />
@@ -27,6 +28,11 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="plotting" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
@@ -66,6 +72,7 @@
     "Python.denton_logic.executor": "Run",
     "Python.domain.executor": "Run",
     "Python.importer.executor": "Run",
+    "Python.orchiestrators.executor": "Run",
     "Python.plotting.executor": "Run",
     "RunOnceActivity.MCP Project settings loaded": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
@@ -74,7 +81,7 @@
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "codeWithMe.voiceChat.enabledByDefault": "false",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "pandas-scripts",
+    "git-widget-placeholder": "orchiestrator",
     "ignore.virus.scanning.warn.message": "true",
     "junie.onboarding.icon.badge.shown": "true",
     "last_opened_file_path": "C:/Users/giego/Documents/GitHub/denton-burgoyne-cs455-method",
@@ -113,7 +120,7 @@
       <updated>1779306652457</updated>
       <workItem from="1779306656029" duration="5240000" />
       <workItem from="1779469824069" duration="15484000" />
-      <workItem from="1779548614186" duration="5675000" />
+      <workItem from="1779548614186" duration="8448000" />
     </task>
     <task id="LOCAL-00001" summary="importer implemented">
       <option name="closed" value="true" />
@@ -139,7 +146,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779544161912</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="denton logic improved">
+      <option name="closed" value="true" />
+      <created>1779554399381</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1779554399381</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -149,13 +164,15 @@
     <MESSAGE value="importer implemented" />
     <MESSAGE value="tests added" />
     <MESSAGE value="plotting added" />
-    <option name="LAST_COMMIT_MESSAGE" value="plotting added" />
+    <MESSAGE value="denton logic improved" />
+    <option name="LAST_COMMIT_MESSAGE" value="denton logic improved" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/denton_burgoyne_cs455_method$domain.coverage" NAME="domain Coverage Results" MODIFIED="1779307966365" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/denton_burgoyne_cs455_method$importer.coverage" NAME="importer Coverage Results" MODIFIED="1779535966792" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/importers" />
     <SUITE FILE_PATH="coverage/denton_burgoyne_cs455_method$.coverage" NAME=" Coverage Results" MODIFIED="1779538043776" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/denton_burgoyne_cs455_method$plotting.coverage" NAME="plotting Coverage Results" MODIFIED="1779543909802" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
-    <SUITE FILE_PATH="coverage/denton_burgoyne_cs455_method$denton_logic.coverage" NAME="denton_logic Coverage Results" MODIFIED="1779554290298" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
+    <SUITE FILE_PATH="coverage/denton_burgoyne_cs455_method$denton_logic.coverage" NAME="denton_logic Coverage Results" MODIFIED="1779556404574" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
+    <SUITE FILE_PATH="coverage/denton_burgoyne_cs455_method$orchiestrators.coverage" NAME="orchiestrators Coverage Results" MODIFIED="1779556537085" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/applications" />
+    <SUITE FILE_PATH="coverage/denton_burgoyne_cs455_method$plotting.coverage" NAME="plotting Coverage Results" MODIFIED="1779556543232" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
   </component>
 </project>

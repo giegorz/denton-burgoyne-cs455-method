@@ -69,7 +69,6 @@ def main():
     n = import_nodes("../files/dane_z_midasa.xlsx")
     e = import_elements("../files/dane_z_midasa.xlsx")
     r = import_results("../files/dane_z_midasa.xlsx")
-    a = average_forces(r)
 
 if __name__ == "__main__":
     main()
