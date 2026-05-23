@@ -4,12 +4,11 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7189e73a-1d76-4080-85fd-a0d336ac77a1" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dane_z_midasa.xlsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/importer.py" afterDir="false" />
+    <list default="true" id="7189e73a-1d76-4080-85fd-a0d336ac77a1" name="Changes" comment="importer implemented">
+      <change afterPath="$PROJECT_DIR$/tests/importer_tests.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dane_z_midasa.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/files/dane_z_midasa.xlsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/importer.py" beforeDir="false" afterPath="$PROJECT_DIR$/importers/importer.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -23,6 +22,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Python Script" />
+        <option value="Python Unit Test" />
       </list>
     </option>
   </component>
@@ -61,6 +61,8 @@
   &quot;keyToString&quot;: {
     &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
     &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python tests.Python tests in importer_tests.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Python tests in imprter_tests.py.executor&quot;: &quot;Run&quot;,
     &quot;Python.domain.executor&quot;: &quot;Run&quot;,
     &quot;Python.importer.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
@@ -88,6 +90,10 @@
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\giego\Documents\GitHub\denton-burgoyne-cs455-method" />
     </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\giego\Documents\GitHub\denton-burgoyne-cs455-method\files" />
+      <recent name="C:\Users\giego\Documents\GitHub\denton-burgoyne-cs455-method\importers" />
+    </key>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -104,15 +110,29 @@
       <option name="presentableId" value="Default" />
       <updated>1779306652457</updated>
       <workItem from="1779306656029" duration="5240000" />
-      <workItem from="1779469824069" duration="5439000" />
+      <workItem from="1779469824069" duration="9816000" />
     </task>
+    <task id="LOCAL-00001" summary="importer implemented">
+      <option name="closed" value="true" />
+      <created>1779531596060</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1779531596060</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="importer implemented" />
+    <option name="LAST_COMMIT_MESSAGE" value="importer implemented" />
+  </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/denton_burgoyne_cs455_method$domain.coverage" NAME="domain Coverage Results" MODIFIED="1779307966365" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/denton_burgoyne_cs455_method$importer.coverage" NAME="importer Coverage Results" MODIFIED="1779531575544" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/denton_burgoyne_cs455_method$importer.coverage" NAME="importer Coverage Results" MODIFIED="1779535966792" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/importers" />
+    <SUITE FILE_PATH="coverage/denton_burgoyne_cs455_method$.coverage" NAME=" Coverage Results" MODIFIED="1779537850708" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
