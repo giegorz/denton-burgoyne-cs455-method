@@ -4,25 +4,23 @@ from matplotlib.colors import BoundaryNorm
 from matplotlib.figure import Figure
 from matplotlib.tri import Triangulation
 
+from applications.orchiestrators import denton_orchestrator
 from denton_logic import *
 
-def plot_moment_field(angles_field: np.ndarray = None,
-                      moment_field: np.ndarray = None,
-                      capacity_field: np.ndarray = None,
-                      convert_to_degrees: bool = True) -> Figure:
+def plot_moment_field(denton: Denton) -> Figure:
     fig, ax = plt.subplots()
 
-    if angles_field is None:
-        angles_field = ThetasField().x
-
-    if convert_to_degrees:
-        angles_field = np.rad2deg(angles_field)
+    angles_field = denton.angles_field
+    capacity_field = denton.capacities_field
+    moment_field = denton.moment_field
 
     if capacity_field is not None:
         ax.plot(angles_field, capacity_field, label="Capacity", color="red", lw=3)
 
     if moment_field is not None:
         ax.plot(angles_field, moment_field, label="Moment", color="blue", lw=2)
+
+    ax.plot(angles_field, moment_field * denton.gamma, label="Moment * gamma", color="green", lw=1, linestyle="--")
 
     ax.set_xlabel("Theta [degrees]")
     ax.set_ylabel("Moment [degrees]")
@@ -46,15 +44,15 @@ def plot_contour(merged_df: pd.DataFrame,
     tri = Triangulation(x, y)
 
     # --- USTAWIENIA KOLORÓW / NORMY ---
-    cmin = min(z) if colormap_min is None else colormap_min
-    cmax = max(z) if colormap_max is None else colormap_max
+    cmin = min(values) if colormap_min is None else colormap_min
+    cmax = max(values) if colormap_max is None else colormap_max
     n_levels = 12                        # ile przedziałów (np. 10 → 10 „kafli”)
     bounds = np.linspace(cmin, cmax, n_levels + 1)  # np. 0,1,2,...,10 (11 krawędzi → 10 przedziałów)
     norm = BoundaryNorm(bounds, ncolors=256, clip=False)  # clip=False → wartości <cmin i >cmax dostaną „extend”
 
     # --- WYPEŁNIENIE (MUSI dostać norm + levels=bounds) ---
     cntr = ax.tricontourf(
-        tri, z,
+        tri, values,
         levels=bounds,
         norm=norm,
         cmap="turbo_r",  # 'turbo', 'viridis', 'JET_R'
@@ -95,17 +93,13 @@ def plot_contour(merged_df: pd.DataFrame,
     return fig
 
 def main():
-    x = ThetasField(number_of_divisions=180).x
+
     c = [100, 35]
     a = [0, 70]
     moments = np.array([35, 15, 10])
-    moment_field = create_moment_field(triad=moments, angles_field=x)
-    cap = Capacity(c,a)
-    cap.convert_to_radians()
-    capacity_triad = cap.to_triad()
-    capacity_field = create_moment_field(capacity_triad, angles_field=x)
+    dent = denton_orchestrator(c,a,moments)
 
-    p = plot_moment_field(angles_field=x, capacity_field=capacity_field, moment_field=moment_field)
+    p = plot_moment_field(dent)
     p.show()
 
 
