@@ -70,7 +70,7 @@ class ThetasField:
         return np.linspace(self.start_angle, self.end_angle, self.number_of_divisions)
 
     @classmethod
-    def default_field(cls):
+    def default_thetas_field(cls):
         return cls(start_angle=0, end_angle=np.pi, number_of_divisions=180)
 
 def create_moment_field(
@@ -82,19 +82,12 @@ def create_moment_field(
 
     if angles_field is None:
         logger.info("\tAngle field not initialised, creating default angles field")
-        angles_field = ThetasField.default_field().x
+        angles_field = ThetasField.default_thetas_field().x
 
     s = np.sin(angles_field)
     c = np.cos(angles_field)
     return Mx * c ** 2 + My * s ** 2 - 2 * Mxy * s * c
 
-def list_of_loads(df: pd.DataFrame) -> list[Any]:
-    return df["load"].unique().tolist()
-
-def results_mean_by_node(df: pd.DataFrame) -> pd.DataFrame:
-    mean_forces = df.groupby(['load', 'node'])[['mxx', 'myy', 'mxy']].mean().reset_index()
-    results_mean = df[['elem', 'load', 'node']].merge(mean_forces, 'left', on=['load', 'node'])
-    return results_mean
 
 class Denton:
     def __init__(
@@ -106,7 +99,7 @@ class Denton:
         logger.info("\tDenton initialised")
         self.moments_triad = np.asarray(moments_triad)
         self.capacity = capacity
-        self.thetas_field = thetas_field or ThetasField.default_field()
+        self.thetas_field = thetas_field or ThetasField.default_thetas_field()
         self.angles_field = thetas_field.x
         self.capacities_triad = self.capacity.to_triad()
         self.moment_field = create_moment_field(
@@ -149,8 +142,67 @@ class Denton:
         self.theta = theta
         return float(gamma), float(theta)
 
-def merge_df(results_mean_by_node: pd.DataFrame) -> pd.DataFrame:
-    nodes = results_mean_by_node[['node', 'x', 'y']]
-    results_mean_by_node['gamma'] = (results_mean_by_node.apply(lambda r: _calc_gamma(r, MR=MR), axis=1))
-    results_mean_by_node = results_mean_by_node.merge(nodes[['node', 'x', 'y']], 'left', on='node')
-    return results_mean_by_node
+def _extract_moment_components(results: pd.DataFrame) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    moments = results[["mxx", "myy", "mxy"]].to_numpy(dtype=float)
+    nodes = results["node"].to_numpy()
+    loads = results["load"].to_numpy()
+    return moments, nodes, loads
+
+
+def _capacity_resistance_field(
+    capacity: Capacity,
+    thetas: np.ndarray,
+) -> np.ndarray:
+    cap_triad = capacity.to_triad()
+    return create_moment_field(cap_triad, thetas)
+
+
+def _moment_field(
+    moments: np.ndarray,
+    thetas: np.ndarray,
+) -> np.ndarray:
+    mx = moments[:, 0][:, None]
+    my = moments[:, 1][:, None]
+    mxy = moments[:, 2][:, None]
+
+    s = np.sin(thetas)
+    c = np.cos(thetas)
+
+    return mx * c**2 + my * s**2 - 2 * mxy * s * c
+
+
+def _gamma_theta_from_fields(
+    resistance_field: np.ndarray,
+    moment_field: np.ndarray,
+    thetas: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray]:
+    mask = moment_field > 0
+    ratio = np.where(mask, resistance_field / moment_field, np.inf)
+    idx = np.argmin(ratio, axis=1)
+
+    gamma = ratio[np.arange(moment_field.shape[0]), idx]
+    theta = thetas[idx]
+    return gamma, theta
+
+def calculate_gammas(
+    results: pd.DataFrame,
+    capacity: Capacity,
+    *,
+    thetas_field: ThetasField | None = None,
+) -> pd.DataFrame:
+    if thetas_field is None:
+        thetas_field = ThetasField.default_thetas_field()
+
+    thetas = thetas_field.x
+    moments, nodes, loads = _extract_moment_components(results)
+
+    resistance_field = _capacity_resistance_field(capacity, thetas)
+    moment_field = _moment_field(moments, thetas)
+    gamma, theta = _gamma_theta_from_fields(resistance_field, moment_field, thetas)
+
+    return pd.DataFrame({
+        "node": nodes,
+        "loads": loads,
+        "gamma": gamma,
+        "theta": theta,
+    })
