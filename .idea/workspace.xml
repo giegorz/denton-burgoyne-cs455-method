@@ -4,10 +4,11 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7189e73a-1d76-4080-85fd-a0d336ac77a1" name="Changes" comment="tests added">
-      <change afterPath="$PROJECT_DIR$/scripts/denton_logic.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scripts/plotting.py" afterDir="false" />
+    <list default="true" id="7189e73a-1d76-4080-85fd-a0d336ac77a1" name="Changes" comment="plotting added">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/importers/importer.py" beforeDir="false" afterPath="$PROJECT_DIR$/importers/importer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/denton_logic.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/denton_logic.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/plotting.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/plotting.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -15,7 +16,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="6" />
+    <option name="cachedIndexableFilesCount" value="14" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -82,7 +83,7 @@
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyIntegratedToolsModulesConfigurable",
     "to.speed.mode.migration.done": "true",
     "vue.rearranger.settings.migration": "true"
   }
@@ -111,7 +112,8 @@
       <option name="presentableId" value="Default" />
       <updated>1779306652457</updated>
       <workItem from="1779306656029" duration="5240000" />
-      <workItem from="1779469824069" duration="14864000" />
+      <workItem from="1779469824069" duration="15484000" />
+      <workItem from="1779548614186" duration="5675000" />
     </task>
     <task id="LOCAL-00001" summary="importer implemented">
       <option name="closed" value="true" />
@@ -129,7 +131,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779538098999</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="plotting added">
+      <option name="closed" value="true" />
+      <created>1779544161912</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1779544161912</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -138,13 +148,14 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="importer implemented" />
     <MESSAGE value="tests added" />
-    <option name="LAST_COMMIT_MESSAGE" value="tests added" />
+    <MESSAGE value="plotting added" />
+    <option name="LAST_COMMIT_MESSAGE" value="plotting added" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/denton_burgoyne_cs455_method$domain.coverage" NAME="domain Coverage Results" MODIFIED="1779307966365" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/denton_burgoyne_cs455_method$importer.coverage" NAME="importer Coverage Results" MODIFIED="1779535966792" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/importers" />
     <SUITE FILE_PATH="coverage/denton_burgoyne_cs455_method$.coverage" NAME=" Coverage Results" MODIFIED="1779538043776" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/denton_burgoyne_cs455_method$denton_logic.coverage" NAME="denton_logic Coverage Results" MODIFIED="1779543405268" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
     <SUITE FILE_PATH="coverage/denton_burgoyne_cs455_method$plotting.coverage" NAME="plotting Coverage Results" MODIFIED="1779543909802" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
+    <SUITE FILE_PATH="coverage/denton_burgoyne_cs455_method$denton_logic.coverage" NAME="denton_logic Coverage Results" MODIFIED="1779554290298" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
   </component>
 </project>

@@ -64,14 +64,6 @@ def import_results(path: str) -> pd.DataFrame:
     except KeyError:
         raise KeyError(f"The sheet {SheetNames.RESULTS} does not exist")
 
-def list_of_loads(df: pd.DataFrame) -> list[Any]:
-    return df["load"].unique().tolist()
-
-def average_forces(df: pd.DataFrame) -> pd.DataFrame:
-    mean_forces = df.groupby(['load', 'node'])[['mxx', 'myy', 'mxy']].mean().reset_index()
-    results_mean = df[['elem', 'load', 'node']].merge(mean_forces, 'left', on=['load', 'node'])
-    return results_mean
-
 
 def main():
     n = import_nodes("../files/dane_z_midasa.xlsx")

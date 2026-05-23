@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import BoundaryNorm
 from matplotlib.figure import Figure
-from denton_logic import *
+from matplotlib.tri import Triangulation
 
+from denton_logic import *
 
 def plot_moment_field(angles_field: np.ndarray = None,
                       moment_field: np.ndarray = None,
@@ -11,7 +13,7 @@ def plot_moment_field(angles_field: np.ndarray = None,
     fig, ax = plt.subplots()
 
     if angles_field is None:
-        angles_field = AnglesField().x
+        angles_field = ThetasField().x
 
     if convert_to_degrees:
         angles_field = np.rad2deg(angles_field)
@@ -30,17 +32,70 @@ def plot_moment_field(angles_field: np.ndarray = None,
 
     return fig
 
-def plot_contour(nodes: pd.DataFrame,
-                 values: np.ndarray,
+def plot_contour(merged_df: pd.DataFrame,
                  *,
                  colormap_min: float = None,
                  colormap_max: float = None,
                  title: str = "Contour plot") -> Figure:
-    pass
 
+    fig, ax = plt.subplots(figsize=(8, 5), dpi=150)
+
+    x = merged_df["x"].to_numpy()
+    y = merged_df["y"].to_numpy()
+    values = merged_df["gamma"].to_numpy()
+    tri = Triangulation(x, y)
+
+    # --- USTAWIENIA KOLORÓW / NORMY ---
+    cmin = min(z) if colormap_min is None else colormap_min
+    cmax = max(z) if colormap_max is None else colormap_max
+    n_levels = 12                        # ile przedziałów (np. 10 → 10 „kafli”)
+    bounds = np.linspace(cmin, cmax, n_levels + 1)  # np. 0,1,2,...,10 (11 krawędzi → 10 przedziałów)
+    norm = BoundaryNorm(bounds, ncolors=256, clip=False)  # clip=False → wartości <cmin i >cmax dostaną „extend”
+
+    # --- WYPEŁNIENIE (MUSI dostać norm + levels=bounds) ---
+    cntr = ax.tricontourf(
+        tri, z,
+        levels=bounds,
+        norm=norm,
+        cmap="turbo_r",  # 'turbo', 'viridis', 'JET_R'
+        antialiased=True
+    )
+
+    # Linie konturów (spójne z bounds)
+    ax.tricontour(
+        tri, values,
+        levels=bounds,
+        colors="k",
+        linewidths=0.5,
+        alpha=0.5,
+        norm=norm,
+        antialiased=True
+    )
+
+    cb = fig.colorbar(
+        cntr, ax=ax, label="γ (gamma)",
+        boundaries=bounds,
+        ticks=bounds,
+        extend="both"
+    )
+
+    ax.triplot(
+        tri,
+        color="0.5",
+        linewidth=0.3,
+        alpha=0.5,
+        zorder=0
+    )
+
+    ax.set_aspect("equal")
+    ax.set_title(title)
+    # ax.set_xlabel("x")
+    # ax.set_ylabel("y")
+    plt.tight_layout()
+    return fig
 
 def main():
-    x = AnglesField(number_of_divisions=180).x
+    x = ThetasField(number_of_divisions=180).x
     c = [100, 35]
     a = [0, 70]
     moments = np.array([35, 15, 10])
