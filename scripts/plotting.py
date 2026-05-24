@@ -47,22 +47,11 @@ def plot_contour(
     y = results["y"].to_numpy()
     values = results["gamma"].to_numpy()
 
+    if colormap_max:
+        values = np.clip(values, colormap_min, colormap_max)
+
     if np.isinf(values).any():
-        values = np.clip(values, 0, 1000)
-
-    min_value = np.min(values)
-    max_value = np.max(values)
-    #TODO
-    colormap_min = colormap_min if colormap_min is not None else min_value
-    colormap_max = colormap_max if colormap_max is not None else max_value
-
-    if colormap_min <= 1:
-        colormap_max = 1.0
-    else:
-        colormap_max = colormap_min + 1
-
-    # if np.isinf(values).any():
-    #     raise ValueError("Values must not be infinite")
+        raise ValueError("Values must not be infinite")
 
     tri = Triangulation(x, y)
 
@@ -79,6 +68,7 @@ def plot_contour(
         antialiased=True,
     )
 
+    # Linie konturów (spójne z bounds)
     ax.tricontour(
         tri, values,
         levels=bounds,
@@ -98,7 +88,7 @@ def plot_contour(
 
 def main():
 
-    c = [800, 500]
+    c = [750, 500]
     a = [0, 70]
     capacity = Capacity(c,a)
     results = import_results("../files/dane_z_midasa.xlsx")
@@ -107,7 +97,7 @@ def main():
     gammas = calculate_gammas(results, capacity)
     merged_results = merge_results_with_nodes(gammas, nodes)
 
-    plot_contour(merged_results,colormap_min=0)
+    plot_contour(merged_results, colormap_max=1.0)
     plt.show()
 
     # moments = np.array([35, 15, 10])
