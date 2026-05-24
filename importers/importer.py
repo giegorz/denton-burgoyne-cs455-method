@@ -13,8 +13,7 @@ class ColumnsNames(str, Enum):
     ELEMENTS = "A,G:N"
     RESULTS = "A,B,C,J:L"
 
-def import_data(path: str, sheet_name: str) -> pd.DataFrame:
-
+def import_data(source, sheet_name: str) -> pd.DataFrame:
     _map = {
         SheetNames.NODES: ColumnsNames.NODES.value,
         SheetNames.ELEMENTS: ColumnsNames.ELEMENTS.value,
@@ -22,11 +21,11 @@ def import_data(path: str, sheet_name: str) -> pd.DataFrame:
     }
 
     try:
-        return pd.read_excel(path, sheet_name=sheet_name, usecols=_map[sheet_name])
+        return pd.read_excel(source, sheet_name=sheet_name, usecols=_map[sheet_name])
     except KeyError:
-        raise KeyError(f"The sheet {sheet_name} does not exist")
+        raise KeyError(f"The sheet {sheet_name.value} does not exist")
 
-def import_nodes(path: str) -> pd.DataFrame | None | Any:
+def import_nodes(path: str) -> pd.DataFrame:
     df = import_data(path, SheetNames.NODES)
 
     df.rename(columns={"Node": "node",

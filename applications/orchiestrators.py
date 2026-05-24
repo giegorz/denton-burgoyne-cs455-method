@@ -2,11 +2,12 @@ import logging
 
 import numpy as np
 
-from scripts.denton_logic import Capacity, ThetasField, Denton
+import pandas as pd
+
+from scripts.denton_logic import Capacity, ThetasField, Denton, create_moment_field
 
 
-def denton_orchestrator(capacity: list[float],
-                        angles: list[float],
+def denton_orchestrator(capacity: Capacity,
                         moment_triad: list[float] | np.ndarray,
                         *,
                         thetas_field: ThetasField = None,
@@ -24,17 +25,15 @@ def denton_orchestrator(capacity: list[float],
         Denton object
     """
 
-    cap = Capacity(capacity, angles)
-
     if convert_angles_to_degrees:
-        cap.convert_to_radians()
+        capacity.convert_to_radians()
 
     if thetas_field is None:
-        thetas_field = ThetasField.default_field()
+        thetas_field = ThetasField.default_thetas_field()
 
     dent=  Denton(
         moments_triad=moment_triad,
-        capacity=cap,
+        capacity=capacity,
         thetas_field=thetas_field
     )
     return dent
@@ -46,8 +45,8 @@ def main():
     c = [100, 35]
     a = [0, 70]
     triad = [35, 15, 10]
+    capacity = Capacity(capacity=c, angles=a)
 
-    a = denton_orchestrator(capacity=c, angles=a, moment_triad=triad)
 
 if __name__ == "__main__":
     main()
