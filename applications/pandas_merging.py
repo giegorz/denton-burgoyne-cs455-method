@@ -2,7 +2,7 @@ import pandas as pd
 from typing import Any
 import timeit
 
-from scripts.denton_logic import calculate_gammas
+from scripts.denton_logic import denton_burgoyne_orchestrator
 from importers.importer import *
 from scripts.denton_logic import Capacity
 
@@ -35,7 +35,7 @@ def main():
     capacity = Capacity(capacity= [750, 500], angles= [0, 90])
     merged = merge_results_with_nodes(rm, n)
 
-    bbb = calculate_gammas(rm, capacity=capacity)
+    bbb = denton_burgoyne_orchestrator(rm, capacity=capacity)
     ccc= merge_results_with_nodes(bbb, n)
 
     # t2 = timeit.timeit(lambda: calculate_denton_vectorized(rm,capacity=capacity), number=10)

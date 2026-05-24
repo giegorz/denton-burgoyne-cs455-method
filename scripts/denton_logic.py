@@ -9,6 +9,10 @@ from importers import import_results, import_elements, import_nodes
 
 logger = logging.getLogger(__name__)
 
+#---------------------------------
+#   MAIN CLASSES
+#---------------------------------
+
 @dataclass
 class Capacity:
     capacity: list[float]
@@ -77,22 +81,6 @@ class ThetasField:
     def default_thetas_field(cls):
         return cls(start_angle=0, end_angle=np.pi, number_of_divisions=180)
 
-def create_moment_field(
-        triad: np.ndarray | list[float],
-        angles_field: np.ndarray = None
-) -> np.ndarray:
-    logger.info(f"\tCreating moment field from triad: {triad}")
-    Mx, My, Mxy = triad
-
-    if angles_field is None:
-        logger.info("\tAngle field not initialised, creating default angles field")
-        angles_field = ThetasField.default_thetas_field().x
-
-    s = np.sin(angles_field)
-    c = np.cos(angles_field)
-    return Mx * c ** 2 + My * s ** 2 - 2 * Mxy * s * c
-
-
 class Denton:
     def __init__(
         self,
@@ -146,14 +134,34 @@ class Denton:
         self.theta = theta
         return float(gamma), float(theta)
 
-def _extract_moment_components(results: pd.DataFrame) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+#---------------------------------
+#   FUNCTIONS TO CALCULATE GAMMA
+#---------------------------------
+
+def create_moment_field(
+        triad: np.ndarray | list[float],
+        angles_field: np.ndarray = None
+) -> np.ndarray:
+    logger.info(f"\tCreating moment field from triad: {triad}")
+    Mx, My, Mxy = triad
+
+    if angles_field is None:
+        logger.info("\tAngle field not initialised, creating default angles field")
+        angles_field = ThetasField.default_thetas_field().x
+
+    s = np.sin(angles_field)
+    c = np.cos(angles_field)
+    return Mx * c ** 2 + My * s ** 2 - 2 * Mxy * s * c
+
+def extract_data_from_results(results: pd.DataFrame) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    elements = results["elem"].to_numpy()
     moments = results[["mxx", "myy", "mxy"]].to_numpy(dtype=float)
     nodes = results["node"].to_numpy()
     loads = results["load"].to_numpy()
-    return moments, nodes, loads
+    return moments, nodes, loads, elements
 
 
-def _capacity_resistance_field(
+def create_capacity_field(
     capacity: Capacity,
     thetas: np.ndarray,
 ) -> np.ndarray:
@@ -161,7 +169,7 @@ def _capacity_resistance_field(
     return create_moment_field(cap_triad, thetas)
 
 
-def _moment_field(
+def create_moments_field(
     moments: np.ndarray,
     thetas: np.ndarray,
 ) -> np.ndarray:
@@ -175,7 +183,7 @@ def _moment_field(
     return mx * c**2 + my * s**2 - 2 * mxy * s * c
 
 
-def _gamma_theta_from_fields(
+def calculate_denton_burgoyne_gamma(
     resistance_field: np.ndarray,
     moment_field: np.ndarray,
     thetas: np.ndarray,
@@ -188,7 +196,7 @@ def _gamma_theta_from_fields(
     theta = thetas[idx]
     return gamma, theta
 
-def calculate_gammas(
+def denton_burgoyne_orchestrator(
     results: pd.DataFrame,
     capacity: Capacity,
     *,
@@ -198,33 +206,46 @@ def calculate_gammas(
         thetas_field = ThetasField.default_thetas_field()
 
     thetas = thetas_field.x
-    moments, nodes, loads = _extract_moment_components(results)
+    moments, nodes, loads, elements = extract_data_from_results(results)
 
-    resistance_field = _capacity_resistance_field(capacity, thetas)
-    moment_field = _moment_field(moments, thetas)
-    gamma, theta = _gamma_theta_from_fields(resistance_field, moment_field, thetas)
+    resistance_field = create_capacity_field(capacity, thetas)
+    moment_field = create_moments_field(moments, thetas)
+    gamma, theta = calculate_denton_burgoyne_gamma(resistance_field, moment_field, thetas)
 
     return pd.DataFrame({
         "node": nodes,
+        "elem": elements,
         "loads": loads,
         "gamma": gamma,
         "theta": theta,
     })
 
+def group_gammas_by_elements(
+    denton_burgoyne_results: pd.DataFrame,
+    how: str = "min"
+) -> pd.DataFrame:
+    _map = {
+        "min": denton_burgoyne_results.groupby(["elem", "loads"])["gamma"].max().reset_index(),
+        "mean": denton_burgoyne_results.groupby(["elem", "loads"])["gamma"].mean().reset_index()
+    }
+
+    if how not in _map.keys():
+        raise ValueError(f"[[{how}]] is not a valid option, please choose 'min' or 'mean' ")
+
+    return _map[how]
+
 def main():
-    c = [100, 35]
+    c = [750, 500]
     a = [0, 70]
     capacity = Capacity(capacity=c, angles=a)
     r = import_results("../files/dane_z_midasa.xlsx" )
     e = import_elements("../files/dane_z_midasa.xlsx")
     n = import_nodes("../files/dane_z_midasa.xlsx")
 
-    print(n.head())
-    print(e.head())
+    denton_results = denton_burgoyne_orchestrator(r, capacity)
+    grouped = group_gammas_by_elements(denton_results, how="min")
 
-    merged = pd.merge()
-
-
+    print(grouped)
 
 if __name__ == "__main__":
     main()

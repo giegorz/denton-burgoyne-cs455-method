@@ -1,15 +1,12 @@
 import matplotlib.pyplot as plt
-import numpy as np
+
 from matplotlib.collections import PatchCollection
-from matplotlib.colors import BoundaryNorm
 from matplotlib.figure import Figure
 from matplotlib.patches import Polygon
 from matplotlib.tri import Triangulation
-
 from applications.pandas_merging import merge_results_with_nodes
 from denton_logic import *
 from importers.importer import import_results, import_nodes
-
 
 def plot_moment_field(denton: Denton) -> Figure:
     fig, ax = plt.subplots()
@@ -98,57 +95,87 @@ def plot_contour(
     return fig
 
 def create_polygons(
-        nodes: pd.DataFrame,
-        elements: pd.DataFrame
-) -> dict[int, list[Any]]:
+    nodes: pd.DataFrame,
+    elements: pd.DataFrame,
+    gammas_by_elements: pd.DataFrame
+) -> pd.DataFrame:
+    # node -> (x, y)
     node_coords = {
         int(row.node): (float(row.x), float(row.y))
         for row in nodes.itertuples(index=False)
     }
 
-    polygons = {}
+    # elem -> gamma_value
+    gamma_map = dict(zip(gammas_by_elements["elem"], gammas_by_elements["gamma"]))
+
+    result = []
 
     for el in elements.itertuples(index=False):
         element_id = int(el.elem)
 
+        # węzły, pomijając 0
         node_ids = [
             int(getattr(el, f"node{i}"))
-            for i in range(1,9)
+            for i in range(1, 9)
             if getattr(el, f"node{i}") != 0
         ]
 
-        if len(node_ids) < 3:
+        # współrzędne wielokąta
+        coords = [node_coords[node_id] for node_id in node_ids if node_id in node_coords]
+
+        if len(coords) < 3:
             continue
 
-        polygon_coords = [
-            node_coords[node_id]
-            for node_id in node_ids
-            if node_id in node_coords
-        ]
+        gamma_value = gamma_map.get(element_id, np.nan)
 
-        if len(polygon_coords) >=3:
-            polygons[element_id] = {
-            "coords": polygon_coords,
-            "value": None,
-            }
+        result.append({
+            "element_id": element_id,
+            "coords": coords,
+            "value": gamma_value,
+        })
 
-    return polygons
+    return pd.DataFrame(result)
 
-def plot_polygons(polygons_dict):
 
-    element_ids = list(polygons_dict.keys())
-    patches = [
-        Polygon(polygons_dict[el_id]["coords"], closed=True)
-        for el_id in element_ids
-    ]
+def plot_polygons(polygons: pd.DataFrame, max_value: float = 1.0):
+    patches = []
+    values = []
 
-    fig, ax = plt.subplots()
-    pc = PatchCollection(patches)
+    for row in polygons.itertuples(index=False):
+        coords = np.array(row.coords)
+        value = row.value
+
+        if len(coords) < 3:
+            continue
+
+        patches.append(Polygon(coords, closed=True))
+        values.append(float(value) if pd.notna(value) else np.nan)
+
+    if not patches:
+        raise ValueError("Brak polygonów do narysowania.")
+
+    values = np.array(values, dtype=float)
+    values = np.clip(values, a_min=None, a_max=max_value)
+
+    fig, ax = plt.subplots(figsize=(8, 8))
+
+    pc = PatchCollection(
+        patches,
+        cmap="turbo_r",
+        edgecolor="black",
+        linewidth=0.8
+    )
+    pc.set_array(np.array(values, dtype=float))
+
     ax.add_collection(pc)
-    ax.autoscale()
+    ax.autoscale_view()
     ax.set_aspect("equal")
+
+    fig.colorbar(pc, ax=ax, label="Gamma")
+    plt.tight_layout()
     plt.show()
-    return fig
+
+    return fig, ax
 
 
 def main():
@@ -160,7 +187,8 @@ def main():
     nodes = import_nodes("../files/dane_z_midasa.xlsx")
     elements = import_elements("../files/dane_z_midasa.xlsx")
 
-    gammas = calculate_gammas(results, capacity)
+    gammas = denton_burgoyne_orchestrator(results, capacity)
+    gammas_by_elements = group_gammas_by_elements(gammas)
     merged_results = merge_results_with_nodes(gammas, nodes)
 
     print(merged_results.head())
@@ -168,17 +196,12 @@ def main():
     plot_contour(merged_results)
     # plt.show()
 
-    pc = create_polygons(nodes=nodes, elements=elements)
+    pc = create_polygons(nodes, elements, gammas_by_elements)
+    print(pc)
+
     plot_polygons(pc)
 
 
-
-
-    # moments = np.array([35, 15, 10])
-    # dent = denton_orchestrator(c,a,moments)
-    #
-    # p = plot_moment_field(dent)
-    # p.show()
 
 
 if __name__ == "__main__":
