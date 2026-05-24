@@ -4,6 +4,7 @@ from matplotlib.colors import BoundaryNorm
 from matplotlib.figure import Figure
 from matplotlib.tri import Triangulation
 
+from applications.pandas_merging import merge_results_with_nodes
 from denton_logic import *
 from importers.importer import import_results, import_nodes
 
@@ -45,8 +46,16 @@ def plot_contour(
     y = results["y"].to_numpy()
     values = results["gamma"].to_numpy()
 
-    if colormap_max:
-        values = np.clip(values, colormap_min, colormap_max)
+    if not colormap_min:
+        colormap_min = np.min(values)
+
+    if colormap_min <= 1:
+        colormap_max = 1
+    else:
+        colormap_max = colormap_min + 1
+
+    values = np.clip(values, colormap_min, colormap_max)
+
 
     if np.isinf(values).any():
         raise ValueError("Values must not be infinite")
@@ -97,7 +106,7 @@ def main():
     gammas = calculate_gammas(results, capacity)
     merged_results = merge_results_with_nodes(gammas, nodes)
 
-    plot_contour(merged_results, colormap_max=1.0)
+    plot_contour(merged_results)
     plt.show()
 
     # moments = np.array([35, 15, 10])
