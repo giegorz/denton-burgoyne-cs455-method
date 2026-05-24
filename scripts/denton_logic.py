@@ -5,6 +5,8 @@ import pandas as pd
 import numpy as np
 import logging
 
+from importers import import_results, import_elements, import_nodes
+
 logger = logging.getLogger(__name__)
 
 @dataclass
@@ -208,3 +210,21 @@ def calculate_gammas(
         "gamma": gamma,
         "theta": theta,
     })
+
+def main():
+    c = [100, 35]
+    a = [0, 70]
+    capacity = Capacity(capacity=c, angles=a)
+    r = import_results("../files/dane_z_midasa.xlsx" )
+    e = import_elements("../files/dane_z_midasa.xlsx")
+    n = import_nodes("../files/dane_z_midasa.xlsx")
+
+    print(n.head())
+    print(e.head())
+
+    merged = pd.merge()
+
+
+
+if __name__ == "__main__":
+    main()

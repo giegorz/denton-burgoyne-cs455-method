@@ -69,6 +69,7 @@ def main():
     e = import_elements("../files/dane_z_midasa.xlsx")
     r = import_results("../files/dane_z_midasa.xlsx")
 
+
 if __name__ == "__main__":
     main()
 
