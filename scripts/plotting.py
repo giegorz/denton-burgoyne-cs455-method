@@ -1,11 +1,13 @@
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 
 from matplotlib.collections import PatchCollection
 from matplotlib.figure import Figure
 from matplotlib.patches import Polygon
 from matplotlib.tri import Triangulation
 from applications.pandas_merging import merge_results_with_nodes
-from denton_logic import *
+from scripts.denton_logic import *
 from importers.importer import import_results, import_nodes
 
 def plot_moment_field(denton: Denton) -> Figure:
@@ -20,14 +22,12 @@ def plot_moment_field(denton: Denton) -> Figure:
 
     if moment_field is not None:
         ax.plot(angles_field, moment_field, label="Moment", color="blue", lw=2)
-
-    ax.plot(angles_field, moment_field * denton.gamma, label="Moment * gamma", color="green", lw=1, linestyle="--")
-
-    ax.set_xlabel("Theta [degrees]")
-    ax.set_ylabel("Moment [degrees]")
-    ax.set_title("Moment Field")
-    ax.set_xlim(np.min(angles_field), np.max(angles_field))
-    ax.grid(linestyle=":")
+        ax.plot(angles_field, moment_field * denton.gamma, label="Moment * gamma", color="green", lw=1, linestyle="--")
+        ax.set_xlabel("Theta [degrees]")
+        ax.set_ylabel("Moment [degrees]")
+        ax.set_title("Moment Field")
+        ax.set_xlim(np.min(angles_field), np.max(angles_field))
+        ax.grid(linestyle=":")
 
     return fig
 
@@ -39,32 +39,34 @@ def plot_contour(
     title: str = "Contour plot",
 ) -> Figure:
 
-    fig, ax = plt.subplots(figsize=(8, 5), dpi=150)
+    #constants:
+
+    N_LEVELS = 13
+    LINE_WIDTH = 0.5
+
+    fig, ax = plt.subplots(figsize=(8, 8), dpi=150)
 
     x = results["x"].to_numpy()
     y = results["y"].to_numpy()
     values = results["gamma"].to_numpy()
 
-    if not colormap_min:
+    if colormap_min is None:
         colormap_min = np.min(values)
 
-    if colormap_min <= 1:
-        colormap_max = 1
-    else:
-        colormap_max = colormap_min + 1
+    if colormap_max is None:
+        colormap_max = 1 if colormap_min <= 1 else colormap_min + 1
+
 
     values = np.clip(values, colormap_min, colormap_max)
 
 
-    if np.isinf(values).any():
-        raise ValueError("Values must not be infinite")
+    if not np.isfinite(values).all():
+        raise ValueError("Values must be finite (no NaN or inf)")
+
 
     tri = Triangulation(x, y)
 
-    cmin = values.min() if colormap_min is None else colormap_min
-    cmax = values.max() if colormap_max is None else colormap_max
-
-    bounds = np.linspace(cmin, cmax, 13)
+    bounds = np.linspace(colormap_min, colormap_max, N_LEVELS)
 
     cntr = ax.tricontourf(
         tri, values,
@@ -79,8 +81,8 @@ def plot_contour(
         tri, values,
         levels=bounds,
         colors="k",
-        linewidths=0.5,
-        alpha=0.5,
+        linewidths=LINE_WIDTH,
+        alpha=LINE_WIDTH,
         antialiased=True,
     )
 
@@ -113,14 +115,12 @@ def create_polygons(
     for el in elements.itertuples(index=False):
         element_id = int(el.elem)
 
-        # węzły, pomijając 0
         node_ids = [
             int(getattr(el, f"node{i}"))
             for i in range(1, 9)
             if getattr(el, f"node{i}") != 0
         ]
 
-        # współrzędne wielokąta
         coords = [node_coords[node_id] for node_id in node_ids if node_id in node_coords]
 
         if len(coords) < 3:
@@ -137,7 +137,7 @@ def create_polygons(
     return pd.DataFrame(result)
 
 
-def plot_polygons(polygons: pd.DataFrame, max_value: float = 1.0):
+def plot_polygons(polygons: pd.DataFrame, max_value: float = 1.0) -> tuple[Figure, plt.Axes]:
     patches = []
     values = []
 
@@ -173,36 +173,5 @@ def plot_polygons(polygons: pd.DataFrame, max_value: float = 1.0):
 
     fig.colorbar(pc, ax=ax, label="Gamma")
     plt.tight_layout()
-    plt.show()
 
     return fig, ax
-
-
-def main():
-
-    c = [750, 500]
-    a = [0, 70]
-    capacity = Capacity(c,a)
-    results = import_results("../files/dane_z_midasa.xlsx")
-    nodes = import_nodes("../files/dane_z_midasa.xlsx")
-    elements = import_elements("../files/dane_z_midasa.xlsx")
-
-    gammas = denton_burgoyne_orchestrator(results, capacity)
-    gammas_by_elements = group_gammas_by_elements(gammas)
-    merged_results = merge_results_with_nodes(gammas, nodes)
-
-    print(merged_results.head())
-
-    plot_contour(merged_results)
-    # plt.show()
-
-    pc = create_polygons(nodes, elements, gammas_by_elements)
-    print(pc)
-
-    plot_polygons(pc)
-
-
-
-
-if __name__ == "__main__":
-    main()
