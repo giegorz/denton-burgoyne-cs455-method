@@ -30,8 +30,9 @@ def import_nodes(path: str) -> pd.DataFrame:
 
     df.rename(columns={"Node": "node",
                        "X(m)": "x",
-                       "Y(m)": "y"}, inplace=True)
-
+                       "Y(m)": "y"},
+              inplace=True
+              )
     try:
         return df
     except KeyError:
@@ -40,7 +41,10 @@ def import_nodes(path: str) -> pd.DataFrame:
 def import_elements(path: str) -> pd.DataFrame:
     df = import_data(path, SheetNames.ELEMENTS)
     df.columns = df.columns.str.lower()
-    df.rename(columns={"element": "elem"}, inplace=True)
+    df.rename(
+        columns={"element": "elem"},
+        inplace=True
+    )
 
     try:
         return df
@@ -51,26 +55,15 @@ def import_results(path: str) -> pd.DataFrame:
     df = import_data(path, SheetNames.RESULTS)
     df.columns = df.columns.str.lower()
     cols = df.columns.tolist()
-
-    df.rename(columns={
-        cols[3]: "mxx",
-        cols[4]: "myy",
-        cols[5]: "mxy"
-    }, inplace=True)
+    df.rename(
+        columns={
+            cols[3]: "mxx",
+            cols[4]: "myy",
+            cols[5]: "mxy"
+        },
+        inplace=True)
 
     try:
         return df
     except KeyError:
         raise KeyError(f"The sheet {SheetNames.RESULTS} does not exist")
-
-
-def main():
-    n = import_nodes("../files/dane_z_midasa.xlsx")
-    e = import_elements("../files/dane_z_midasa.xlsx")
-    r = import_results("../files/dane_z_midasa.xlsx")
-
-
-if __name__ == "__main__":
-    main()
-
-
