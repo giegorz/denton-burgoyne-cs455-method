@@ -24,9 +24,9 @@ def denton_orchestrator(capacity: Capacity,
     Returns:
         Denton object
     """
-
-    if convert_angles_to_degrees:
-        capacity.convert_to_radians()
+    #TODO - conversion is secured in CAPACITY class
+    # if convert_angles_to_degrees:
+    #     capacity.convert_to_radians()
 
     if thetas_field is None:
         thetas_field = ThetasField.default_thetas_field()

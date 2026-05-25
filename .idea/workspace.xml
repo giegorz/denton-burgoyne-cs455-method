@@ -5,12 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7189e73a-1d76-4080-85fd-a0d336ac77a1" name="Changes" comment="vectorized denton method + contour plot">
-      <change afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scripts/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/denton-burgoyne-cs455-method.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/denton-burgoyne-cs455-method.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/plotting.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/plotting.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/applications/orchiestrators.py" beforeDir="false" afterPath="$PROJECT_DIR$/applications/orchiestrators.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/denton_logic.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/denton_logic.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -94,7 +91,7 @@
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "codeWithMe.voiceChat.enabledByDefault": "false",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "denton-logic-improvement",
     "ignore.virus.scanning.warn.message": "true",
     "junie.onboarding.icon.badge.shown": "true",
     "last_opened_file_path": "C:/Users/CZERPAG/GitHub/denton-burgoyne-cs455-method",
@@ -134,7 +131,7 @@
       <workItem from="1779306656029" duration="5240000" />
       <workItem from="1779469824069" duration="15484000" />
       <workItem from="1779548614186" duration="8448000" />
-      <workItem from="1779700651353" duration="2179000" />
+      <workItem from="1779700651353" duration="3573000" />
     </task>
     <task id="LOCAL-00001" summary="importer implemented">
       <option name="closed" value="true" />

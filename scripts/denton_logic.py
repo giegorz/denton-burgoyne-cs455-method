@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Any
 
 import pandas as pd
 import numpy as np
@@ -8,6 +7,10 @@ import logging
 from importers import import_results, import_elements, import_nodes
 
 logger = logging.getLogger(__name__)
+
+
+EPS = 1e-12
+TOL = 1e-12
 
 #---------------------------------
 #   MAIN CLASSES
@@ -26,6 +29,7 @@ class Capacity:
             raise ValueError("Capacity must have at least 2 elements")
         if len(self.angles) <2:
             raise ValueError("Angles must have at least 2 elements")
+        self.convert_to_radians()
 
     def to_dataframe(self):
         """
@@ -86,53 +90,118 @@ class Denton:
         self,
         moments_triad: np.ndarray | list[float],
         capacity: Capacity,
-        thetas_field: ThetasField
+        thetas_field: ThetasField | None = None,
     ):
-        logger.info("\tDenton initialised")
-        self.moments_triad = np.asarray(moments_triad)
+        logger.info("Denton initialised")
+
+        # --- validation ---
+        self.moments_triad = np.asarray(moments_triad, dtype=float)
+        if self.moments_triad.shape != (3,):
+            raise ValueError("moments_triad must have shape (3,)")
+
         self.capacity = capacity
         self.thetas_field = thetas_field or ThetasField.default_thetas_field()
-        self.angles_field = thetas_field.x
+
+        # --- precompute ---
         self.capacities_triad = self.capacity.to_triad()
-        self.moment_field = create_moment_field(
-            self.moments_triad,
-            self.angles_field)
-        self.capacities_field = create_moment_field(
-            self.capacities_triad,
-            self.angles_field)
-        self.gamma = None
-        self.theta = None
+
+        self._moment_field = None
+        self._capacities_field = None
+
+        # --- outputs ---
+        self.gamma: float | None = None
+        self.theta: float | None = None
+
+        # --- compute ---
+        self._compute_fields()
         self.calculate_gamma_theta()
 
+    # -------------------------
+    # Properties
+    # -------------------------
+    @property
+    def angles_field(self) -> np.ndarray:
+        return self.thetas_field.x
 
+    @property
+    def moment_field(self) -> np.ndarray:
+        return self._moment_field
 
-    def calculate_gamma_theta(self,
-                              eps=1e-12,
-                              tol=1e-12) -> tuple[float, float]:
+    @property
+    def capacities_field(self) -> np.ndarray:
+        return self._capacities_field
+
+    # -------------------------
+    # Internal methods
+    # -------------------------
+    def _compute_fields(self) -> None:
+        """Compute moment and capacity fields."""
+        angles = self.angles_field
+
+        logger.debug("Computing moment and capacity fields")
+
+        self._moment_field = create_moment_field(
+            self.moments_triad,
+            angles,
+        )
+
+        self._capacities_field = create_moment_field(
+            self.capacities_triad,
+            angles,
+        )
+
+        if not np.all(np.isfinite(self._moment_field)):
+            raise ValueError("moment_field contains invalid values")
+
+        if not np.all(np.isfinite(self._capacities_field)):
+            raise ValueError("capacities_field contains invalid values")
+
+    # -------------------------
+    # Main computation
+    # -------------------------
+    def calculate_gamma_theta(
+        self,
+        eps: float = EPS,
+        tol: float = TOL,
+    ) -> tuple[float, float]:
+        """
+        Compute gamma and theta based on Denton-Burgoyne criterion.
+        """
 
         MR = self.capacities_field
         MN = self.moment_field
         X = self.angles_field
 
-        # jeżeli funkcja nośności MR < 0
+        # Case: invalid resistance
         if np.any((MR < 0) & (MN > eps)):
-            return 1000., 0.
-        mask = (MN > 0) & (MR >= 0)
-        if not np.any(mask):
-            return 1000., 0.
-        ratio = MR[mask] / MN[mask]
-        min_arg = np.argmin(ratio)
-        gamma = ratio[min_arg]
-        theta = X[mask][min_arg]
+            logger.warning("Negative resistance detected")
+            self.gamma, self.theta = np.nan, np.nan
+            return self.gamma, self.theta
 
-        # walidacja
+        mask = (MN > eps) & (MR >= 0)
+
+        if not np.any(mask):
+            logger.warning("No valid gamma found")
+            self.gamma, self.theta = np.nan, np.nan
+            return self.gamma, self.theta
+
+        ratio = MR[mask] / MN[mask]
+
+        idx = np.argmin(ratio)
+        gamma = ratio[idx]
+        theta = X[mask][idx]
+
+        # --- validation correction ---
         if np.any(gamma * MN > MR + tol):
+            logger.debug("Gamma correction applied")
             den = np.clip(MN, eps, None)
             gamma = np.min((MR + tol) / den)
 
-        self.gamma = gamma
-        self.theta = theta
-        return float(gamma), float(theta)
+        self.gamma = float(gamma)
+        self.theta = float(theta)
+
+        return self.gamma, self.theta
+
 
 #---------------------------------
 #   FUNCTIONS TO CALCULATE GAMMA
@@ -142,15 +211,19 @@ def create_moment_field(
         triad: np.ndarray | list[float],
         angles_field: np.ndarray = None
 ) -> np.ndarray:
-    logger.info(f"\tCreating moment field from triad: {triad}")
+    logger.debug(f"\tCreating moment field from triad: {triad}")
+
+    if triad.shape !=(3,):
+        raise ValueError("Triad must be shape (3,)")
+
     Mx, My, Mxy = triad
 
     if angles_field is None:
         logger.info("\tAngle field not initialised, creating default angles field")
         angles_field = ThetasField.default_thetas_field().x
 
-    s = np.sin(angles_field)
-    c = np.cos(angles_field)
+    s = np.sin(angles_field)[None,:]
+    c = np.cos(angles_field)[None,:]
     return Mx * c ** 2 + My * s ** 2 - 2 * Mxy * s * c
 
 def extract_data_from_results(results: pd.DataFrame) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -225,7 +298,7 @@ def group_gammas_by_elements(
     how: str = "min"
 ) -> pd.DataFrame:
     _map = {
-        "min": denton_burgoyne_results.groupby(["elem", "loads"])["gamma"].max().reset_index(),
+        "min": denton_burgoyne_results.groupby(["elem", "loads"])["gamma"].min().reset_index(),
         "mean": denton_burgoyne_results.groupby(["elem", "loads"])["gamma"].mean().reset_index()
     }
 
@@ -233,19 +306,3 @@ def group_gammas_by_elements(
         raise ValueError(f"[[{how}]] is not a valid option, please choose 'min' or 'mean' ")
 
     return _map[how]
-
-def main():
-    c = [750, 500]
-    a = [0, 70]
-    capacity = Capacity(capacity=c, angles=a)
-    r = import_results("../files/dane_z_midasa.xlsx" )
-    e = import_elements("../files/dane_z_midasa.xlsx")
-    n = import_nodes("../files/dane_z_midasa.xlsx")
-
-    denton_results = denton_burgoyne_orchestrator(r, capacity)
-    grouped = group_gammas_by_elements(denton_results, how="min")
-
-    print(grouped)
-
-if __name__ == "__main__":
-    main()
