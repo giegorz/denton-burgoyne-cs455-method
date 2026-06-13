@@ -275,7 +275,6 @@ def denton_burgoyne_orchestrator(
     *,
     thetas_field: ThetasField | None = None,
 ) -> pd.DataFrame:
-
     if thetas_field is None:
         thetas_field = ThetasField.default_thetas_field()
 

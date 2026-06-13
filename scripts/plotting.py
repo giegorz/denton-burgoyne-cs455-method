@@ -7,6 +7,9 @@ from matplotlib.figure import Figure
 from matplotlib.patches import Polygon
 from matplotlib.tri import Triangulation
 from scripts.denton_logic import *
+from applications.pandas_merging import merge_results_with_nodes
+from scripts.denton_logic import *
+from importers.importer import import_results, import_nodes
 
 def plot_moment_field(denton: Denton) -> Figure:
     fig, ax = plt.subplots()
