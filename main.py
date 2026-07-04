@@ -6,7 +6,9 @@ from matplotlib import pyplot as plt
 from applications.pandas_merging import merge_results_with_nodes
 from importers import import_nodes, import_results, import_elements
 from scripts.denton_logic import Capacity, denton_burgoyne_orchestrator, group_gammas_by_elements
-from scripts.plotting import plot_contour, create_polygons, plot_polygons
+# from scripts.plotting import plot_contour, create_polygons
+from scripts.plot_contour import create_polygons, plot_contour
+from scripts.plot_polygons import plot_polygons
 import pandas as pd
 
 class PlotType(str, Enum):
@@ -52,7 +54,7 @@ def visualise(
 
     match plot_type:
         case plot_type.CONTOUR:
-            fig = plot_contour(merged_results)
+            fig = plot_contour(merged_results, colormap_min=0, colormap_max=1)
             return fig
         case plot_type.POLYGON:
             polygons = create_polygons(nodes, elements, gammas_by_elements)
@@ -67,7 +69,13 @@ def main():
         [750, 500],
         [0, 70]
     )
-    visualise(nodes, elements, gammas_by_elements, merged_results, plot_type= PlotType.POLYGON)
+    visualise(
+        nodes= nodes,
+        elements= elements,
+        gammas_by_elements= gammas_by_elements,
+        merged_results= merged_results,
+        plot_type= PlotType.POLYGON
+    )
     plt.show()
 
 if __name__ == "__main__":
