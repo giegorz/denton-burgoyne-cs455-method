@@ -11,7 +11,7 @@ from scripts.denton_logic import (
     denton_burgoyne_by_node,
     group_gammas_by_elements,
 )
-from scripts.plotting import plot_contour, create_polygons, plot_polygons
+from scripts import plot_contour, create_polygons, plot_polygons
 import pandas as pd
 
 class PlotType(str, Enum):
