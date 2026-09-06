@@ -71,6 +71,32 @@ def import_results(path: str) -> pd.DataFrame:
 def list_of_loads(df: pd.DataFrame) -> List:
     return df["load"].unique().tolist()
 
+def filter_by_loads(
+    df: pd.DataFrame,
+    loads: str | List[str] | None,
+) -> pd.DataFrame:
+    """Keep only the given load case(s) from a results dataframe.
+
+    `loads=None` returns `df` unchanged (all load cases). A single load
+    name or a list of names restricts it to those - use `list_of_loads`
+    first to see what's available.
+    """
+    if loads is None:
+        return df
+
+    if isinstance(loads, str):
+        loads = [loads]
+
+    available = set(df["load"].unique())
+    missing = set(loads) - available
+    if missing:
+        raise ValueError(
+            f"Unknown load case(s): {sorted(missing)}. "
+            f"Available: {sorted(available)}"
+        )
+
+    return df[df["load"].isin(loads)].reset_index(drop=True)
+
 def average_forces(df: pd.DataFrame) -> pd.DataFrame:
     """Average duplicate (elem, load, node) result rows.
 

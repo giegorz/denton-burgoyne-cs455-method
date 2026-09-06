@@ -4,8 +4,6 @@ import pandas as pd
 import numpy as np
 import logging
 
-from importers import import_results, import_elements, import_nodes
-
 logger = logging.getLogger(__name__)
 
 
@@ -343,6 +341,77 @@ def denton_burgoyne_by_node(
         "gamma": gamma,
         "theta": theta,
     })
+
+def denton_burgoyne_report_by_node(
+    node_moments: pd.DataFrame,
+    capacity: Capacity,
+    *,
+    thetas_field: ThetasField | None = None,
+) -> pd.DataFrame:
+    """
+    Same computation as `denton_burgoyne_by_node`, but keeps the full
+    moment field MN(theta) for every theta as extra columns - one column
+    per angle, named by its degree value - instead of collapsing it down
+    to a single gamma/theta. Meant for manual inspection: dump it to Excel
+    and chart a row to see the moment field over theta directly.
+
+    This is a reporting table, not something the rest of the pipeline
+    consumes - it's much wider/heavier than `denton_burgoyne_by_node`
+    (one column per theta) and grows with `thetas_field.number_of_divisions`.
+
+    The first row is a synthetic "CAPACITY" row (node=NaN) holding the
+    resistance field MR(theta) in those same theta columns, so it lines up
+    with the moment field row you want to compare it against - select both
+    rows plus the header in Excel and plot them on the same chart to see,
+    visually, where the load line first touches the resistance envelope.
+    """
+    if thetas_field is None:
+        thetas_field = ThetasField.default_thetas_field()
+
+    thetas = thetas_field.x
+    moments = node_moments[["mxx", "myy", "mxy"]].to_numpy(dtype=float)
+
+    resistance_field = create_capacity_field(capacity, thetas)
+    moment_field = create_moments_field(moments, thetas)
+    gamma, theta = calculate_denton_burgoyne_gamma(resistance_field, moment_field, thetas)
+
+    theta_columns = [f"{deg:.4f}" for deg in np.rad2deg(thetas)]
+
+    points = pd.concat(
+        [
+            pd.DataFrame({
+                "node": node_moments["node"].to_numpy(),
+                "load": node_moments["load"].to_numpy(),
+                "mxx": moments[:, 0],
+                "myy": moments[:, 1],
+                "mxy": moments[:, 2],
+                "gamma": gamma,
+                "theta_deg": np.rad2deg(theta),
+            }),
+            pd.DataFrame(moment_field, columns=theta_columns),
+        ],
+        axis=1,
+    )
+
+    cap_mx, cap_my, cap_mxy = capacity.to_triad()
+    capacity_row = pd.concat(
+        [
+            pd.DataFrame({
+                "node": [np.nan],
+                "load": ["CAPACITY"],
+                "mxx": [cap_mx],
+                "myy": [cap_my],
+                "mxy": [cap_mxy],
+                "gamma": [np.nan],
+                "theta_deg": [np.nan],
+            }),
+            pd.DataFrame(resistance_field, columns=theta_columns),
+        ],
+        axis=1,
+    )
+
+    return pd.concat([capacity_row, points], ignore_index=True)
+
 
 def group_gammas_by_elements(
     denton_burgoyne_results: pd.DataFrame,
