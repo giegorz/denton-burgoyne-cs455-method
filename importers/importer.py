@@ -70,3 +70,15 @@ def import_results(path: str) -> pd.DataFrame:
 
 def list_of_loads(df: pd.DataFrame) -> List:
     return df["load"].unique().tolist()
+
+def average_forces(df: pd.DataFrame) -> pd.DataFrame:
+    """Average duplicate (elem, load, node) result rows.
+
+    A single element can report the same node more than once (e.g. corner
+    values from adjacent Gauss points); this collapses those into one row
+    per (elem, load, node) before any further processing.
+    """
+    return (
+        df.groupby(["elem", "load", "node"], as_index=False)[["mxx", "myy", "mxy"]]
+        .mean()
+    )

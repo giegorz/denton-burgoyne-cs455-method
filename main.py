@@ -3,9 +3,14 @@ from unittest import case
 
 from matplotlib import pyplot as plt
 
-from applications.pandas_merging import merge_results_with_nodes
+from applications.pandas_merging import merge_results_with_nodes, results_mean_by_node
 from importers import import_nodes, import_results, import_elements
-from scripts.denton_logic import Capacity, denton_burgoyne_orchestrator, group_gammas_by_elements
+from scripts.denton_logic import (
+    Capacity,
+    denton_burgoyne_orchestrator,
+    denton_burgoyne_by_node,
+    group_gammas_by_elements,
+)
 from scripts.plotting import plot_contour, create_polygons, plot_polygons
 import pandas as pd
 
@@ -29,15 +34,26 @@ def process_data(
     angles_list: list[float],
     filepath: str = "files/dane_z_midasa.xlsx"
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Compute gamma-related outputs and merge with geometry."""
+    """Compute gamma-related outputs and merge with geometry.
+
+    Two separate gamma computations are produced on purpose:
+      - `gammas_by_elements`: gamma per (elem, load) from the raw per-element
+        results, used for the polygon plot.
+      - `merged_results`: gamma per (node, load), computed *after* averaging
+        the moments of every element sharing that node (so a shared node
+        gets one gamma value, not one per contributing element) - used for
+        the contour plot.
+    """
 
     nodes, elements, results = load_data(filepath)
-
     capacity = Capacity(capacity_list, angles_list)
-    gammas = denton_burgoyne_orchestrator(results, capacity)
 
+    gammas = denton_burgoyne_orchestrator(results, capacity)
     gammas_by_elements = group_gammas_by_elements(gammas)
-    merged_results = merge_results_with_nodes(gammas, nodes)
+
+    node_moments = results_mean_by_node(results)
+    node_gammas = denton_burgoyne_by_node(node_moments, capacity)
+    merged_results = merge_results_with_nodes(node_gammas, nodes)
 
     return nodes, elements, gammas_by_elements, merged_results
 

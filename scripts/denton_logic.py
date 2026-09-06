@@ -10,7 +10,6 @@ logger = logging.getLogger(__name__)
 
 
 EPS = 1e-12
-TOL = 1e-12
 
 #---------------------------------
 #   MAIN CLASSES
@@ -162,43 +161,28 @@ class Denton:
     def calculate_gamma_theta(
         self,
         eps: float = EPS,
-        tol: float = TOL,
     ) -> tuple[float, float]:
         """
-        Compute gamma and theta based on Denton-Burgoyne criterion.
+        Compute gamma and theta based on the Denton-Burgoyne criterion.
+
+        Delegates to the same `calculate_denton_burgoyne_gamma` used by the
+        vectorized orchestrator, so both paths share one definition of what
+        "no valid gamma" means (see that function's docstring).
         """
+        gamma, theta = calculate_denton_burgoyne_gamma(
+            self.capacities_field,
+            self.moment_field,
+            self.angles_field,
+            eps=eps,
+        )
 
-        MR = self.capacities_field
-        MN = self.moment_field
-        X = self.angles_field
+        if np.any(gamma == 0.0):
+            logger.warning("Negative resistance detected for a positive moment - gamma set to 0")
+        if np.any(np.isinf(gamma)):
+            logger.warning("No direction with positive moment - gamma set to inf")
 
-        # Case: invalid resistance
-        if np.any((MR < 0) & (MN > eps)):
-            logger.warning("Negative resistance detected")
-            self.gamma, self.theta = np.nan, np.nan
-            return self.gamma, self.theta
-
-        mask = (MN > eps) & (MR >= 0)
-
-        if not np.any(mask):
-            logger.warning("No valid gamma found")
-            self.gamma, self.theta = np.nan, np.nan
-            return self.gamma, self.theta
-
-        ratio = MR[mask] / MN[mask]
-
-        idx = np.argmin(ratio)
-        gamma = ratio[idx]
-        theta = X[mask][idx]
-
-        # --- validation correction ---
-        if np.any(gamma * MN > MR + tol):
-            logger.debug("Gamma correction applied")
-            den = np.clip(MN, eps, None)
-            gamma = np.min((MR + tol) / den)
-
-        self.gamma = float(gamma)
-        self.theta = float(theta)
+        self.gamma = float(gamma[0])
+        self.theta = float(theta[0])
 
         return self.gamma, self.theta
 
@@ -260,14 +244,62 @@ def calculate_denton_burgoyne_gamma(
     resistance_field: np.ndarray,
     moment_field: np.ndarray,
     thetas: np.ndarray,
+    *,
+    eps: float = EPS,
 ) -> tuple[np.ndarray, np.ndarray]:
-    mask = moment_field > 0
-    ratio = np.where(mask, resistance_field / moment_field, np.inf)
-    idx = np.argmin(ratio, axis=1)
+    """
+    Compute the Denton-Burgoyne load factor gamma and governing angle theta,
+    one row at a time. `resistance_field` may be shape (1, n_thetas) shared
+    by every row of `moment_field`, or match its shape exactly.
 
-    gamma = ratio[np.arange(moment_field.shape[0]), idx]
+    For each row, gamma is min(MR(theta)/MN(theta)) over every theta where
+    there is demand (MN(theta) > eps). Two edge cases are given explicit,
+    finite sentinel values instead of nan/inf-by-accident, so callers (e.g.
+    plot_contour) never have to special-case them:
+
+      - No theta has positive demand at all -> the moment field never
+        governs at this point -> gamma = +inf (the safest possible value;
+        clip it for plotting, see plot_contour's colormap_max).
+      - Demand is positive at some theta where the resistance is *negative*
+        -> the section has no capacity at all in that direction, i.e. a
+        genuine reinforcement/design deficiency, not just "low margin" ->
+        gamma = 0.0 (the most critical value), regardless of what ratio
+        would come out of the other, valid thetas.
+    """
+    demand = moment_field > eps
+    no_capacity = demand & (resistance_field < 0)
+    invalid_rows = np.any(no_capacity, axis=1)
+    no_demand_rows = ~np.any(demand, axis=1)
+
+    valid = demand & (resistance_field >= 0)
+    safe_moment = np.where(np.abs(moment_field) < eps, eps, moment_field)
+    ratio = np.where(valid, resistance_field / safe_moment, np.inf)
+
+    idx = np.argmin(ratio, axis=1)
+    gamma = ratio[np.arange(ratio.shape[0]), idx]
     theta = thetas[idx]
+
+    gamma = np.where(no_demand_rows, np.inf, gamma)
+    gamma = np.where(invalid_rows, 0.0, gamma)
+
     return gamma, theta
+
+
+def _gamma_theta_for_moments(
+    moments: np.ndarray,
+    capacity: Capacity,
+    thetas_field: ThetasField | None,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Shared core of the per-element and per-node orchestrators."""
+    if thetas_field is None:
+        thetas_field = ThetasField.default_thetas_field()
+
+    thetas = thetas_field.x
+    resistance_field = create_capacity_field(capacity, thetas)
+    moment_field = create_moments_field(moments, thetas)
+
+    return calculate_denton_burgoyne_gamma(resistance_field, moment_field, thetas)
+
 
 def denton_burgoyne_orchestrator(
     results: pd.DataFrame,
@@ -275,20 +307,39 @@ def denton_burgoyne_orchestrator(
     *,
     thetas_field: ThetasField | None = None,
 ) -> pd.DataFrame:
-    if thetas_field is None:
-        thetas_field = ThetasField.default_thetas_field()
-
-    thetas = thetas_field.x
+    """Gamma/theta per (elem, node, load) row, straight from raw results."""
     moments, nodes, loads, elements = extract_data_from_results(results)
-
-    resistance_field = create_capacity_field(capacity, thetas)
-    moment_field = create_moments_field(moments, thetas)
-    gamma, theta = calculate_denton_burgoyne_gamma(resistance_field, moment_field, thetas)
+    gamma, theta = _gamma_theta_for_moments(moments, capacity, thetas_field)
 
     return pd.DataFrame({
         "node": nodes,
         "elem": elements,
         "loads": loads,
+        "gamma": gamma,
+        "theta": theta,
+    })
+
+
+def denton_burgoyne_by_node(
+    node_moments: pd.DataFrame,
+    capacity: Capacity,
+    *,
+    thetas_field: ThetasField | None = None,
+) -> pd.DataFrame:
+    """
+    Gamma/theta per (node, load), computed from moments already averaged
+    across every element sharing that node (see
+    `applications.pandas_merging.results_mean_by_node`) - one gamma value
+    per point instead of one per contributing element.
+
+    `node_moments` must have columns: node, load, mxx, myy, mxy.
+    """
+    moments = node_moments[["mxx", "myy", "mxy"]].to_numpy(dtype=float)
+    gamma, theta = _gamma_theta_for_moments(moments, capacity, thetas_field)
+
+    return pd.DataFrame({
+        "node": node_moments["node"].to_numpy(),
+        "load": node_moments["load"].to_numpy(),
         "gamma": gamma,
         "theta": theta,
     })
